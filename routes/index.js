@@ -62,24 +62,7 @@ router.get('/logout', (req, res, next) => {
 
 // Home route with search + requests/friends
 // Example route
-router.get('/home', isLoggedIn, async (req, res) => {
-  try {
-    const currentUser = await userModel.findById(req.user._id)
-      .populate('requests')
-      .populate('friends')
-      .exec();
 
-    const users = await userModel.find({ _id: { $ne: req.user._id } });
-
-    res.render('home', {
-      currentUser,
-      users
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
-  }
-});
 
 
 
