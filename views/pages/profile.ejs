@@ -114,4 +114,21 @@
 
     </section>
   </div>
+  <script>
+  const button = document.getElementById('dropdownButton');
+  const menu = document.getElementById('dropdownMenu');
+  button.addEventListener('click', () => {
+    const expanded = button.getAttribute("aria-expanded") === "true" || false;
+    button.setAttribute("aria-expanded", !expanded);
+    menu.classList.toggle('hidden');
+    menu.classList.toggle('opacity-0');
+    menu.classList.toggle('scale-95');
+  });
+  window.addEventListener('click', (e) => {
+    if (!document.getElementById('dropdownWrapper').contains(e.target)) {
+      menu.classList.add('hidden', 'opacity-0', 'scale-95');
+      button.setAttribute("aria-expanded", "false");
+    }
+  });
+</script>
   <%- include('components/footer') %>

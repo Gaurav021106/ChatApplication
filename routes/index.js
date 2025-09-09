@@ -18,10 +18,15 @@ function isLoggedIn(req, res, next) {
 // Profile route
 router.get('/profile', isLoggedIn, async (req, res) => {
   try {
-    const currentUser = await userModel.findById(req.user._id);
+    const currentUser = await userModel.findById(req.user._id)
+      .populate('friends', 'FullName username profilePicture')
+      .populate('requests', 'FullName username profilePicture')
+      .exec();
+
+    // all users except current one
     const users = await userModel.find({ _id: { $ne: req.user._id } });
 
-    res.render('profile', {
+    res.render('./pages/profile', {
       currentUser,
       users
     });
@@ -30,6 +35,7 @@ router.get('/profile', isLoggedIn, async (req, res) => {
     res.status(500).send("Server Error");
   }
 });
+
 
 // Signup route
 router.post('/signup', (req, res) => {
@@ -51,6 +57,21 @@ router.post('/login',
     failureFlash: false
   })
 );
+router.get('/home', isLoggedIn, async (req, res) => {
+  try {
+    const currentUser = await userModel.findById(req.user._id)
+    .populate('friends')
+    const users = await userModel.find({ _id: { $ne: req.user._id } });
+
+    res.render('./pages/home', {
+      currentUser,
+      users
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
 
 // Logout route
 router.get('/logout', (req, res, next) => {
@@ -60,76 +81,10 @@ router.get('/logout', (req, res, next) => {
   });
 });
 
-// Home route with search + requests/friends
-// Example route
-
-
-
-
-// ✅ Send Friend Request
-router.post("/add/:id", isLoggedIn, async (req, res) => {
-  try {
-    const me = await userModel.findById(req.user._id);
-    const other = await userModel.findById(req.params.id);
-
-    if (!other.requests.includes(me._id) && !other.friends.includes(me._id)) {
-      other.requests.push(me._id); // my request goes into "other" user's requests
-      await other.save();
-    }
-    res.redirect("/home");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error sending request");
-  }
-});
-
-// ✅ Accept Friend Request
-router.post("/accept/:id", isLoggedIn, async (req, res) => {
-  try {
-    const me = await userModel.findById(req.user._id);
-    const other = await userModel.findById(req.params.id);
-
-    // Check if this request exists
-    if (me.requests.includes(other._id)) {
-      // Add each other to friends list
-      me.friends.push(other._id);
-      other.friends.push(me._id);
-
-      // Remove request
-      me.requests = me.requests.filter(r => r.toString() !== other._id.toString());
-
-      await me.save();
-      await other.save();
-    }
-    res.redirect("/home");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error accepting request");
-  }
-});
-
-// ✅ Reject Friend Request
-router.post("/reject/:id", isLoggedIn, async (req, res) => {
-  try {
-    const me = await userModel.findById(req.user._id);
-
-    // Just remove from requests
-    me.requests = me.requests.filter(r => r.toString() !== req.params.id);
-
-    await me.save();
-    res.redirect("/home");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error rejecting request");
-  }
-});
-
-
-
 // Signup page
-router.get('/', (req, res) => res.render('signup'));
+router.get('/', (req, res) => res.render('./Auth/signup'));
 
 // Login page
-router.get('/login', (req, res) => res.render('login'));
+router.get('/login', (req, res) => res.render('./Auth/login'));
 
 module.exports = router;
